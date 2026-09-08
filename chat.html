@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dashboard — Rizqi</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23101E33'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='serif' font-size='18' font-weight='700' fill='%23F6CB7A'%3ER%3C/text%3E%3C/svg%3E">
 <meta name="robots" content="noindex, nofollow">
@@ -12,238 +12,209 @@
 <style>
 :root{
   --cream:#FFFDF7;--sage:#7FAE6A;--rose:#E8604C;
-  --gold:#F2B441;--gold-lt:#F6CB7A;--dark:#101E33;--moon:#5FAEDB;
-  --line:rgba(242,180,65,.18);--panel-bg:rgba(9,18,32,.5);
-  --sidebar-w:230px;
+  --gold:#F2B441;--gold-lt:#F6CB7A;--moon:#5FAEDB;
+  --line:rgba(242,180,65,.18);--panel-bg:rgba(9,18,32,.55);
 }
-*{margin:0;padding:0;box-sizing:border-box;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
 body{
   font-family:'Cormorant Garamond',serif;
-  background:radial-gradient(ellipse at 20% 20%,rgba(127,174,106,.12) 0%,transparent 55%),
-              radial-gradient(ellipse at 80% 80%,rgba(232,96,76,.10) 0%,transparent 55%),
+  background:radial-gradient(ellipse at 20% 10%,rgba(127,174,106,.12) 0%,transparent 55%),
+              radial-gradient(ellipse at 80% 90%,rgba(232,96,76,.10) 0%,transparent 55%),
               linear-gradient(160deg,#0A1830 0%,#123152 55%,#1C4A73 100%);
   color:var(--cream);
   min-height:100vh;
-  overflow:hidden;
+  display:flex;flex-direction:column;
 }
 
-/* ===== App shell ===== */
-#app{display:flex;height:100vh;}
+/* ===== Top bar ===== */
+#topbar{padding:16px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+#topbar .ttl{min-width:0;}
+#topbar h1{font-weight:500;font-size:1.1rem;color:var(--cream);}
+#topbar .sub{font-size:.7rem;color:rgba(255,253,247,.45);font-style:italic;margin-top:1px;}
+#status-pill{display:flex;align-items:center;gap:6px;background:rgba(9,18,32,.6);
+  border:1px solid var(--line);border-radius:20px;padding:6px 12px;flex-shrink:0;}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,253,247,.25);flex-shrink:0;}
+.dot.on{background:var(--sage);box-shadow:0 0 6px rgba(127,174,106,.8);}
+#status-pill span{font-family:'Space Mono',monospace;font-size:.6rem;color:rgba(255,253,247,.65);
+  white-space:nowrap;}
 
-/* ===== Sidebar ===== */
-#sidebar{width:var(--sidebar-w);flex-shrink:0;border-right:1px solid var(--line);
-  display:flex;flex-direction:column;padding:22px 14px;background:rgba(6,13,24,.35);}
-.brand{padding:0 8px 22px;}
-.brand .eyebrow{font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:3px;color:var(--gold);}
-.brand h1{font-weight:500;font-size:1.05rem;color:var(--cream);margin-top:4px;}
-.brand .sub{font-size:.7rem;color:rgba(255,253,247,.4);font-style:italic;}
-
-.navlist{list-style:none;display:flex;flex-direction:column;gap:3px;flex:1;}
-.navlist li{display:flex;}
-.nav-btn{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:12px;cursor:pointer;color:rgba(255,253,247,.6);
-  font-family:'Cormorant Garamond',serif;font-size:.95rem;transition:background .2s,color .2s;}
-.nav-btn:hover{background:rgba(242,180,65,.08);color:var(--cream);}
-.nav-btn.active{background:rgba(242,180,65,.16);color:var(--gold-lt);}
-.nav-ic{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
-
-.side-live{margin-top:10px;padding:12px;border-radius:14px;background:rgba(9,18,32,.6);
-  border:1px solid var(--line);}
-.side-live .lbl{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:2px;color:rgba(255,253,247,.4);margin-bottom:6px;}
-.side-live .row{display:flex;align-items:center;gap:8px;}
-.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,253,247,.25);flex-shrink:0;}
-.dot.on{background:var(--sage);box-shadow:0 0 8px rgba(127,174,106,.7);}
-.side-live .txt{font-size:.78rem;color:var(--cream);}
-.side-live .stage{font-family:'Space Mono',monospace;font-size:.58rem;color:rgba(255,253,247,.45);margin-top:5px;}
-
-/* ===== Mobile sidebar toggle ===== */
-#menu-toggle{display:none;}
-#sidebar-scrim{display:none;}
-
-/* ===== Main area ===== */
-#main{flex:1;display:flex;flex-direction:column;min-width:0;}
-#topbar{padding:18px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-shrink:0;}
-#topbar .ttl-wrap{flex:1;min-width:0;}
-#topbar h2{font-weight:500;font-size:1.15rem;color:var(--cream);letter-spacing:.3px;}
-#topbar .sub{font-size:.75rem;color:rgba(255,253,247,.45);font-style:italic;margin-top:1px;}
-#hamburger{display:none;background:none;border:1px solid var(--line);color:var(--gold-lt);
-  border-radius:10px;width:36px;height:36px;font-size:1rem;cursor:pointer;flex-shrink:0;}
-
-#content{flex:1;overflow-y:auto;}
-.panel{display:none;flex-direction:column;height:100%;}
+/* ===== Content ===== */
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.panel{display:none;flex-direction:column;min-height:100%;}
 .panel.active{display:flex;}
 
 /* ===== Overview ===== */
-#panel-overview{overflow-y:auto;padding:24px 26px 40px;}
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
-.stat-card{background:var(--panel-bg);border:1px solid var(--line);border-radius:18px;padding:18px 20px;
-  cursor:pointer;transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px;}
-.stat-card:hover{border-color:rgba(242,180,65,.45);background:rgba(9,18,32,.7);}
-.stat-card .s-lbl{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:1.5px;color:var(--gold);}
-.stat-card .s-num{font-size:2.1rem;font-weight:500;color:var(--cream);line-height:1.1;}
-.stat-card .s-sub{font-size:.78rem;color:rgba(255,253,247,.45);font-style:italic;}
-.stat-card.live .s-num{font-size:1.4rem;}
-
-.progress-track{margin-top:6px;height:8px;border-radius:6px;background:rgba(255,253,247,.1);overflow:hidden;}
+#panel-overview{padding:18px 16px 24px;gap:10px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.stat-card{background:var(--panel-bg);border:1px solid var(--line);border-radius:16px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.stat-card .s-lbl{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:1px;color:var(--gold);}
+.stat-card .s-num{font-size:1.7rem;font-weight:500;color:var(--cream);line-height:1.1;}
+.stat-card .s-sub{font-size:.72rem;color:rgba(255,253,247,.45);font-style:italic;}
+.progress-track{margin-top:4px;height:6px;border-radius:6px;background:rgba(255,253,247,.1);overflow:hidden;}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));border-radius:6px;transition:width .5s ease;}
 
-.ov-section-lbl{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:2px;color:rgba(255,253,247,.4);margin:6px 0 12px;}
-.preview-list{display:flex;flex-direction:column;gap:10px;}
-.preview-row{background:var(--panel-bg);border:1px solid var(--line);border-radius:14px;padding:12px 16px;
-  cursor:pointer;transition:border-color .2s;}
-.preview-row:hover{border-color:rgba(242,180,65,.4);}
-.preview-row .p-date{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:1px;color:rgba(255,253,247,.4);}
-.preview-row .p-text{font-size:.88rem;color:var(--cream);margin-top:3px;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;}
-
-/* ===== Chat body ===== */
-#chat-body{flex:1;overflow-y:auto;padding:20px 26px;display:flex;flex-direction:column;gap:10px;max-width:680px;width:100%;}
-.bubble{max-width:78%;padding:10px 15px;border-radius:16px;font-size:.95rem;line-height:1.55;word-wrap:break-word;white-space:pre-wrap;position:relative;}
-.bubble .meta{display:block;font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:1px;color:rgba(255,253,247,.4);margin-top:5px;}
-.bubble.naffa{align-self:flex-start;background:rgba(127,174,106,.16);border:1px solid rgba(127,174,106,.28);}
-.bubble.rizqi{align-self:flex-end;background:rgba(242,180,65,.18);border:1px solid rgba(242,180,65,.3);}
+.ov-section-lbl{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:2px;
+  color:rgba(255,253,247,.4);margin:4px 0 10px;}
+.preview-list{display:flex;flex-direction:column;gap:8px;}
+.preview-row{background:var(--panel-bg);border:1px solid var(--line);border-radius:14px;padding:11px 14px;}
+.preview-row .p-date{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:1px;color:rgba(255,253,247,.4);}
+.preview-row .p-text{font-size:.85rem;color:var(--cream);margin-top:3px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
 .empty{margin:auto;text-align:center;font-style:italic;font-size:.85rem;color:rgba(255,253,247,.4);padding:20px;}
 
-/* ===== Input bar (chat) ===== */
-#bar{border-top:1px solid var(--line);padding:14px 26px;display:flex;gap:10px;max-width:680px;width:100%;flex-shrink:0;}
-#msg{flex:1;background:rgba(9,18,32,.55);border:1px solid rgba(242,180,65,.28);border-radius:14px;padding:11px 14px;
-  color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:.95rem;resize:none;outline:none;max-height:120px;}
+/* ===== Chat ===== */
+#chat-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:9px;}
+.bubble{max-width:82%;padding:9px 13px;border-radius:15px;font-size:.92rem;line-height:1.5;
+  word-wrap:break-word;white-space:pre-wrap;}
+.bubble .meta{display:block;font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:1px;
+  color:rgba(255,253,247,.4);margin-top:4px;}
+.bubble.naffa{align-self:flex-start;background:rgba(127,174,106,.16);border:1px solid rgba(127,174,106,.28);}
+.bubble.rizqi{align-self:flex-end;background:rgba(242,180,65,.18);border:1px solid rgba(242,180,65,.3);}
+#bar{border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;flex-shrink:0;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+#msg{flex:1;background:rgba(9,18,32,.55);border:1px solid rgba(242,180,65,.28);border-radius:14px;
+  padding:10px 13px;color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:.95rem;
+  resize:none;outline:none;max-height:100px;}
 #msg:focus{border-color:rgba(242,180,65,.6);}
-#send{background:rgba(242,180,65,.22);border:1px solid rgba(242,180,65,.5);color:var(--gold-lt);border-radius:14px;
-  padding:0 20px;font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:1px;cursor:pointer;transition:background .3s;}
-#send:hover{background:rgba(242,180,65,.35);}
-#send:disabled{opacity:.5;cursor:default;}
+#send{background:rgba(242,180,65,.22);border:1px solid rgba(242,180,65,.5);color:var(--gold-lt);
+  border-radius:14px;padding:0 18px;font-family:'Space Mono',monospace;font-size:.68rem;
+  letter-spacing:1px;flex-shrink:0;}
+#send:disabled{opacity:.5;}
 
 /* ===== Entry list (Ruang Hujan / Surat 2030) ===== */
-.entry-list{flex:1;overflow-y:auto;padding:22px 26px 20px;max-width:680px;width:100%;display:flex;flex-direction:column;gap:12px;}
-.entry-card{background:rgba(9,18,32,.5);border:1px solid rgba(242,180,65,.22);border-radius:16px;padding:16px 18px;position:relative;}
-.entry-card .e-date{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:1px;color:rgba(255,253,247,.4);margin-bottom:8px;}
-.entry-card .e-text{font-size:.92rem;line-height:1.65;color:var(--cream);white-space:pre-wrap;}
-.entry-card .e-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin:10px 0 3px;text-transform:uppercase;}
+.entry-list{flex:1;overflow-y:auto;padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px;}
+.entry-card{background:rgba(9,18,32,.5);border:1px solid rgba(242,180,65,.22);border-radius:15px;
+  padding:14px 16px;}
+.entry-card .e-date{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:1px;
+  color:rgba(255,253,247,.4);margin-bottom:7px;}
+.entry-card .e-text{font-size:.88rem;line-height:1.6;color:var(--cream);white-space:pre-wrap;}
+.entry-card .e-label{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:2px;
+  color:var(--gold);margin:9px 0 3px;text-transform:uppercase;}
 .entry-card .e-label:first-of-type{margin-top:0;}
-.panel-toolbar{padding:12px 26px;display:flex;justify-content:flex-start;border-top:1px solid var(--line);max-width:680px;width:100%;flex-shrink:0;}
+.panel-toolbar{padding:10px 16px;display:flex;border-top:1px solid var(--line);flex-shrink:0;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom));}
 .save-btn{background:rgba(127,174,106,.16);border:1px solid rgba(127,174,106,.4);color:var(--sage);
-  border-radius:30px;padding:9px 20px;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:1px;
-  cursor:pointer;transition:background .3s;}
-.save-btn:hover{background:rgba(127,174,106,.28);}
-.save-btn:disabled{opacity:.4;cursor:default;}
+  border-radius:30px;padding:9px 18px;font-family:'Space Mono',monospace;font-size:.62rem;
+  letter-spacing:1px;width:100%;}
+.save-btn:disabled{opacity:.4;}
 
 /* ===== Live panel ===== */
-#panel-live{align-items:center;justify-content:center;}
+#panel-live{align-items:center;justify-content:center;padding:24px;}
+#live-status{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;}
+#live-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,253,247,.25);}
+#live-online-lbl{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:2px;
+  color:rgba(255,253,247,.6);text-transform:uppercase;}
+#live-stage-lbl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold-lt);}
+#live-sub-lbl{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:1px;
+  color:rgba(255,253,247,.4);}
 
-/* ===== Responsive: sidebar becomes a slide-in drawer ===== */
-@media (max-width:860px){
-  #sidebar{position:fixed;top:0;left:0;bottom:0;z-index:40;transform:translateX(-100%);
-    transition:transform .28s ease;box-shadow:0 0 40px rgba(0,0,0,.5);}
-  #sidebar.open{transform:translateX(0);}
-  #sidebar-scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35;opacity:0;
-    pointer-events:none;transition:opacity .25s ease;}
-  #sidebar-scrim.show{opacity:1;pointer-events:auto;}
-  #hamburger{display:block;}
-  #topbar{padding:16px 18px;}
-  #panel-overview,#chat-body,#bar,.entry-list,.panel-toolbar{padding-left:18px;padding-right:18px;}
+/* ===== Bottom tab bar (navigasi utama, dioptimalkan untuk HP) ===== */
+#tabbar{flex-shrink:0;display:flex;border-top:1px solid var(--line);
+  background:rgba(6,13,24,.55);backdrop-filter:blur(6px);
+  padding-bottom:env(safe-area-inset-bottom);}
+.tab-btn{all:unset;box-sizing:border-box;flex:1;display:flex;flex-direction:column;
+  align-items:center;gap:3px;padding:9px 4px 8px;color:rgba(255,253,247,.5);cursor:pointer;}
+.tab-btn .tab-ic{font-size:1.15rem;line-height:1;}
+.tab-btn .tab-lbl{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.5px;}
+.tab-btn.active{color:var(--gold-lt);}
+
+/* Di layar lebar (tablet/desktop), batasi lebar konten biar tidak melebar aneh */
+@media (min-width:640px){
+  #topbar,#panel-overview,#chat-body,#bar,.entry-list,.panel-toolbar{
+    max-width:640px;margin-left:auto;margin-right:auto;width:100%;
+  }
+  #tabbar{max-width:640px;margin:0 auto;width:100%;}
 }
 </style>
 </head>
 <body>
 
-<div id="app">
-  <div id="sidebar-scrim"></div>
-  <aside id="sidebar">
-    <div class="brand">
-      <div class="eyebrow">✦ TAMAN BULAN</div>
-      <h1>Dashboard</h1>
-      <div class="sub">khusus Rizqi</div>
-    </div>
-    <ul class="navlist" id="navlist">
-      <li><button class="nav-btn active" data-tab="overview"><span class="nav-ic">▤</span>Overview</button></li>
-      <li><button class="nav-btn" data-tab="chat"><span class="nav-ic">💬</span>Chat Diam-diam</button></li>
-      <li><button class="nav-btn" data-tab="rain"><span class="nav-ic">🌧️</span>Ruang Hujan</button></li>
-      <li><button class="nav-btn" data-tab="letter"><span class="nav-ic">✉️</span>Surat ke 2030</button></li>
-      <li><button class="nav-btn" data-tab="live"><span class="nav-ic">🔴</span>Live</button></li>
-    </ul>
-    <div class="side-live">
-      <div class="lbl">STATUS NAFFA</div>
-      <div class="row"><span class="dot" id="side-dot"></span><span class="txt" id="side-online">Memuat…</span></div>
-      <div class="stage" id="side-stage"></div>
-    </div>
-  </aside>
+<div id="topbar">
+  <div class="ttl">
+    <h1 id="page-title">Overview</h1>
+    <div class="sub" id="page-sub">ringkasan aktivitas Naffa di Taman Bulan</div>
+  </div>
+  <div id="status-pill">
+    <span class="dot" id="side-dot"></span>
+    <span id="side-online">Memuat…</span>
+  </div>
+</div>
 
-  <main id="main">
-    <div id="topbar">
-      <button id="hamburger" aria-label="Buka menu">☰</button>
-      <div class="ttl-wrap">
-        <h2 id="page-title">Overview</h2>
-        <div class="sub" id="page-sub">ringkasan aktivitas Naffa di Taman Bulan</div>
+<div id="content">
+  <!-- ===== PANEL: OVERVIEW ===== -->
+  <div class="panel active" id="panel-overview">
+    <div class="stat-grid">
+      <div class="stat-card" data-jump="chat">
+        <div class="s-lbl">CHAT DIAM-DIAM</div>
+        <div class="s-num" id="ov-chat-count">–</div>
+        <div class="s-sub" id="ov-chat-sub">memuat…</div>
+      </div>
+      <div class="stat-card" data-jump="rain">
+        <div class="s-lbl">RUANG HUJAN</div>
+        <div class="s-num" id="ov-rain-count">–</div>
+        <div class="s-sub" id="ov-rain-sub">memuat…</div>
+      </div>
+      <div class="stat-card" data-jump="letter">
+        <div class="s-lbl">SURAT KE 2030</div>
+        <div class="s-num" id="ov-letter-count">–</div>
+        <div class="s-sub" id="ov-letter-sub">memuat…</div>
+      </div>
+      <div class="stat-card" data-jump="live">
+        <div class="s-lbl">PERJALANAN NAFFA</div>
+        <div class="s-num" id="ov-live-stage">–</div>
+        <div class="s-sub" id="ov-live-sub">memuat…</div>
+        <div class="progress-track"><div class="progress-fill" id="ov-progress-fill" style="width:0%"></div></div>
       </div>
     </div>
 
-    <div id="content">
-      <!-- ===== PANEL: OVERVIEW ===== -->
-      <div class="panel active" id="panel-overview">
-        <div class="stat-grid">
-          <div class="stat-card" data-jump="chat">
-            <div class="s-lbl">CHAT DIAM-DIAM</div>
-            <div class="s-num" id="ov-chat-count">–</div>
-            <div class="s-sub" id="ov-chat-sub">memuat…</div>
-          </div>
-          <div class="stat-card" data-jump="rain">
-            <div class="s-lbl">RUANG HUJAN</div>
-            <div class="s-num" id="ov-rain-count">–</div>
-            <div class="s-sub" id="ov-rain-sub">memuat…</div>
-          </div>
-          <div class="stat-card" data-jump="letter">
-            <div class="s-lbl">SURAT KE 2030</div>
-            <div class="s-num" id="ov-letter-count">–</div>
-            <div class="s-sub" id="ov-letter-sub">memuat…</div>
-          </div>
-          <div class="stat-card live" data-jump="live">
-            <div class="s-lbl">PERJALANAN NAFFA</div>
-            <div class="s-num" id="ov-live-stage">–</div>
-            <div class="s-sub" id="ov-live-sub">memuat…</div>
-            <div class="progress-track"><div class="progress-fill" id="ov-progress-fill" style="width:0%"></div></div>
-          </div>
-        </div>
+    <div class="ov-section-lbl">PESAN TERBARU</div>
+    <div class="preview-list" id="ov-recent-chat"><div class="empty" style="padding:14px 0;">Belum ada pesan.</div></div>
+  </div>
 
-        <div class="ov-section-lbl">PESAN TERBARU</div>
-        <div class="preview-list" id="ov-recent-chat"><div class="empty" style="padding:14px 0;">Belum ada pesan.</div></div>
-      </div>
-
-      <!-- ===== PANEL: CHAT ===== -->
-      <div class="panel" id="panel-chat">
-        <div id="chat-body"><div class="empty">Memuat percakapan…</div></div>
-        <div id="bar">
-          <textarea id="msg" rows="1" placeholder="Tulis balasan…"></textarea>
-          <button id="send">Kirim</button>
-        </div>
-      </div>
-
-      <!-- ===== PANEL: LIVE ===== -->
-      <div class="panel" id="panel-live">
-        <div id="live-status" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;text-align:center;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span id="live-dot" style="width:10px;height:10px;border-radius:50%;background:rgba(255,253,247,.25);flex-shrink:0;"></span>
-            <span id="live-online-lbl" style="font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:2px;color:rgba(255,253,247,.6);text-transform:uppercase;">Menunggu data…</span>
-          </div>
-          <div id="live-stage-lbl" style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold-lt);"></div>
-          <div id="live-sub-lbl" style="font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:1px;color:rgba(255,253,247,.4);"></div>
-        </div>
-      </div>
-
-      <!-- ===== PANEL: RUANG HUJAN ===== -->
-      <div class="panel" id="panel-rain">
-        <div class="entry-list" id="rain-list"><div class="empty">Memuat…</div></div>
-        <div class="panel-toolbar"><button class="save-btn" id="rain-save">⬇ Simpan semua sebagai teks</button></div>
-      </div>
-
-      <!-- ===== PANEL: SURAT KE 2030 ===== -->
-      <div class="panel" id="panel-letter">
-        <div class="entry-list" id="letter-list"><div class="empty">Memuat…</div></div>
-        <div class="panel-toolbar"><button class="save-btn" id="letter-save">⬇ Simpan semua sebagai teks</button></div>
-      </div>
+  <!-- ===== PANEL: CHAT ===== -->
+  <div class="panel" id="panel-chat">
+    <div id="chat-body"><div class="empty">Memuat percakapan…</div></div>
+    <div id="bar">
+      <textarea id="msg" rows="1" placeholder="Tulis balasan…"></textarea>
+      <button id="send">Kirim</button>
     </div>
-  </main>
+  </div>
+
+  <!-- ===== PANEL: RUANG HUJAN ===== -->
+  <div class="panel" id="panel-rain">
+    <div class="entry-list" id="rain-list"><div class="empty">Memuat…</div></div>
+    <div class="panel-toolbar"><button class="save-btn" id="rain-save">⬇ Simpan semua sebagai teks</button></div>
+  </div>
+
+  <!-- ===== PANEL: SURAT KE 2030 ===== -->
+  <div class="panel" id="panel-letter">
+    <div class="entry-list" id="letter-list"><div class="empty">Memuat…</div></div>
+    <div class="panel-toolbar"><button class="save-btn" id="letter-save">⬇ Simpan semua sebagai teks</button></div>
+  </div>
+
+  <!-- ===== PANEL: LIVE ===== -->
+  <div class="panel" id="panel-live">
+    <div id="live-status">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <span id="live-dot"></span>
+        <span id="live-online-lbl">Menunggu data…</span>
+      </div>
+      <div id="live-stage-lbl"></div>
+      <div id="live-sub-lbl"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Bottom tab bar ===== -->
+<div id="tabbar">
+  <button class="tab-btn active" data-tab="overview"><span class="tab-ic">▤</span><span class="tab-lbl">Overview</span></button>
+  <button class="tab-btn" data-tab="chat"><span class="tab-ic">💬</span><span class="tab-lbl">Chat</span></button>
+  <button class="tab-btn" data-tab="rain"><span class="tab-ic">🌧️</span><span class="tab-lbl">Hujan</span></button>
+  <button class="tab-btn" data-tab="letter"><span class="tab-ic">✉️</span><span class="tab-lbl">Surat</span></button>
+  <button class="tab-btn" data-tab="live"><span class="tab-ic">🔴</span><span class="tab-lbl">Live</span></button>
 </div>
 
 <script>
@@ -258,13 +229,7 @@ const firebaseConfig = {
 if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ---------- Mulai semua listener langsung, tanpa gerbang akses ----------
-startChat();
-startRainList();
-startLetterList();
-startLive();
-
-// ---------- Sidebar / tab switching ----------
+// ---------- Tab switching ----------
 const titles={
   overview:['Overview','ringkasan aktivitas Naffa di Taman Bulan'],
   chat:['Balas Naffa','tersambung langsung ke Taman Bulan'],
@@ -273,30 +238,21 @@ const titles={
   live:['Live','lihat stage yang sedang dibuka Naffa, real-time']
 };
 function switchTab(tab){
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   const t=titles[tab];
   document.getElementById('page-title').textContent=t[0];
   document.getElementById('page-sub').textContent=t[1];
-  closeSidebar();
 }
-document.querySelectorAll('.nav-btn').forEach(btn=>{
+document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
 });
 document.querySelectorAll('[data-jump]').forEach(card=>{
   card.addEventListener('click', ()=> switchTab(card.dataset.jump));
 });
 
-// ---------- Mobile sidebar drawer ----------
-const sidebarEl=document.getElementById('sidebar');
-const scrimEl=document.getElementById('sidebar-scrim');
-function openSidebar(){ sidebarEl.classList.add('open'); scrimEl.classList.add('show'); }
-function closeSidebar(){ sidebarEl.classList.remove('open'); scrimEl.classList.remove('show'); }
-document.getElementById('hamburger').addEventListener('click', openSidebar);
-scrimEl.addEventListener('click', closeSidebar);
-
-// ---------- helper: format tanggal ----------
+// ---------- Helper: format tanggal ----------
 function fmtDate(iso){
   const d=new Date(iso);
   if(isNaN(d)) return '';
@@ -369,6 +325,7 @@ async function sendMsg(){
       sender:'rizqi', text:text, ts:new Date().toISOString()
     });
     msgInput.value='';
+    msgInput.style.height='auto';
   }catch(e){ console.error(e); }
   sendBtn.disabled=false;
   msgInput.focus();
@@ -379,12 +336,15 @@ document.getElementById('msg').addEventListener('keydown', function(e){
 });
 document.getElementById('msg').addEventListener('input', function(){
   this.style.height='auto';
-  this.style.height=Math.min(this.scrollHeight,120)+'px';
+  this.style.height=Math.min(this.scrollHeight,100)+'px';
 });
 
 // ---------- Ruang Hujan ----------
+let rainStarted=false;
 let rainEntries=[];
 function startRainList(){
+  if(rainStarted) return;
+  rainStarted=true;
   const list=document.getElementById('rain-list');
   db.collection('releases').orderBy('createdAt','desc').onSnapshot(function(snap){
     if(snap.empty){
@@ -422,8 +382,11 @@ document.getElementById('rain-save').addEventListener('click', function(){
 });
 
 // ---------- Surat ke 2030 ----------
+let letterStarted=false;
 let letterEntries=[];
 function startLetterList(){
+  if(letterStarted) return;
+  letterStarted=true;
   const list=document.getElementById('letter-list');
   db.collection('future_letters').orderBy('writtenAt','desc').onSnapshot(function(snap){
     if(snap.empty){
@@ -469,10 +432,9 @@ document.getElementById('letter-save').addEventListener('click', function(){
   downloadText('surat-2030-naffa.txt', content);
 });
 
-// ---------- Live view ----------
+// ---------- Live ----------
 const STAGE_LABELS={
-  s1:'01 · Pintu Taman', s2:'02 · Teka-Teki Bunga', s2b:'03 · Rahasia Tahun Lahir',
-  scd:'04 · Dua Dekade Hidup', str:'05 · Kartu Ramalan Bulan', sph:'06 · Esensi Bunga & Hewan',
+  s1:'01 · Gerbang', s2:'02 · Sambutan', s2b:'03 · Kilas Balik', s3b2:'04 · Prolog',
   s3:'07 · Otentikasi Jiwa', s3b:'08 · Mahkota Takdir', sci:'09 · Animasi Filosofis',
   spz:'10 · Puzzle Bunga', 'svg-screen':'11 · Virtual Garden', srh:'12 · Ruang Hujan',
   s8:'13 · Surat Nostalgia', sfl:'14 · Surat ke 2030', s9:'15 · Tiga Restu',
@@ -486,8 +448,7 @@ function startLive(){
   liveStarted=true;
   const dot=document.getElementById('live-dot'), onlineLbl=document.getElementById('live-online-lbl'),
         stageLbl=document.getElementById('live-stage-lbl'), subLbl=document.getElementById('live-sub-lbl');
-  const sideDot=document.getElementById('side-dot'), sideOnline=document.getElementById('side-online'),
-        sideStage=document.getElementById('side-stage');
+  const sideDot=document.getElementById('side-dot'), sideOnline=document.getElementById('side-online');
 
   db.collection('live_presence').doc('naffa').onSnapshot(function(doc){
     if(!doc.exists){
@@ -495,7 +456,6 @@ function startLive(){
       stageLbl.textContent='';
       subLbl.textContent='Menunggu Naffa membuka Taman Bulan ✦';
       sideOnline.textContent='Belum ada data';
-      sideStage.textContent='';
       updateOverviewLive(null);
       return;
     }
@@ -512,8 +472,7 @@ function startLive(){
     subLbl.textContent=label;
 
     sideDot.classList.toggle('on', online);
-    sideOnline.textContent=online?'Online sekarang':'Terakhir '+Math.round(ageMs/1000)+'d lalu';
-    sideStage.textContent='Stage '+stageIdx+'/'+total+' · '+label;
+    sideOnline.textContent=online?'Online':'Terakhir '+Math.round(ageMs/1000)+'d lalu';
 
     updateOverviewLive({online, stageIdx, total, label});
   }, function(err){
@@ -577,6 +536,12 @@ function updateOverviewLive(d){
   subEl.textContent=(d.online?'● Online sekarang':'terakhir dilihat')+' · '+d.label;
   fillEl.style.width=Math.round((d.stageIdx/d.total)*100)+'%';
 }
+
+// ---------- Mulai semua listener, setelah semua fungsi & variabel siap ----------
+startChat();
+startRainList();
+startLetterList();
+startLive();
 </script>
 </body>
 </html>
