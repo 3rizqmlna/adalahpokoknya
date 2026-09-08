@@ -143,8 +143,18 @@ body{
 .save-btn:disabled{opacity:.4;}
 
 /* ===== Foto (photobooth) ===== */
-#photo-grid{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-#photo-grid img{width:100%;border-radius:12px;border:1px solid var(--line);display:block;cursor:pointer;}
+#photo-list{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.photo-row{background:rgba(9,18,32,.5);border:1px solid rgba(242,180,65,.22);border-radius:15px;
+  padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.photo-row .pr-info{min-width:0;}
+.photo-row .pr-name{font-size:.92rem;color:var(--cream);}
+.photo-row .pr-date{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:.5px;
+  color:rgba(255,253,247,.45);margin-top:3px;}
+.photo-row .pr-actions{display:flex;gap:7px;flex-shrink:0;}
+.pr-btn{all:unset;box-sizing:border-box;background:rgba(242,180,65,.16);border:1px solid rgba(242,180,65,.4);
+  color:var(--gold-lt);border-radius:11px;padding:7px 12px;font-family:'Space Mono',monospace;
+  font-size:.58rem;letter-spacing:.5px;cursor:pointer;white-space:nowrap;text-decoration:none;}
+.pr-btn.pr-dl{background:rgba(127,174,106,.14);border-color:rgba(127,174,106,.4);color:var(--sage);}
 #photo-lightbox{position:fixed;inset:0;z-index:90;background:rgba(4,9,18,.92);display:none;
   align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;}
 #photo-lightbox.show{display:flex;}
@@ -285,7 +295,7 @@ body{
 
     <!-- ===== PANEL: FOTO ===== -->
     <div class="panel" id="panel-photo">
-      <div id="photo-grid"><div class="empty">Memuat…</div></div>
+      <div id="photo-list"><div class="empty">Memuat…</div></div>
     </div>
 
     <!-- ===== PANEL: LIVE ===== -->
@@ -317,7 +327,7 @@ body{
   <button class="pl-close" id="pl-close">✕</button>
   <img id="pl-img" src="">
   <div style="display:flex;gap:10px;">
-    <a id="pl-download" download="foto-naffa.jpg">⬇ Unduh foto ini</a>
+    <button id="pl-download" class="pr-btn pr-dl" style="padding:9px 20px;font-size:.65rem;">⬇ Unduh foto ini</button>
     <button id="pl-delete" class="pl-del-btn">🗑 Hapus foto ini</button>
   </div>
 </div>
@@ -719,23 +729,67 @@ document.getElementById('letter-save').addEventListener('click', function(){
 // ---------- Foto (photobooth) ----------
 let photoStarted=false;
 let photoEntries=[];
+function dataUrlToBlob(dataUrl){
+  const parts=dataUrl.split(',');
+  const mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/jpeg';
+  const bin=atob(parts[1]);
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr], {type:mime});
+}
+function downloadPhoto(dataUrl, filename){
+  try{
+    const blobUrl=URL.createObjectURL(dataUrlToBlob(dataUrl));
+    const a=document.createElement('a');
+    a.href=blobUrl; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(blobUrl);
+  }catch(e){
+    // fallback kalau konversi blob gagal — tetap coba unduh langsung dari data URL
+    const a=document.createElement('a');
+    a.href=dataUrl; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+}
 function startPhotoList(){
   if(photoStarted) return;
   photoStarted=true;
-  const grid=document.getElementById('photo-grid');
+  const list=document.getElementById('photo-list');
   db.collection('photobooth').orderBy('ts','desc').onSnapshot(function(snap){
     photoEntries=[];
     snap.forEach(function(doc){ const d=doc.data(); d._id=doc.id; photoEntries.push(d); });
     if(!photoEntries.length){
-      grid.innerHTML='<div class="empty" style="grid-column:1/-1;">Belum ada foto dari Bilik Foto ✦</div>';
+      list.innerHTML='<div class="empty">Belum ada foto dari Bilik Foto ✦</div>';
     }else{
-      grid.innerHTML='';
-      photoEntries.forEach(function(p){
-        const img=document.createElement('img');
-        img.src=p.img; img.loading='lazy';
-        img.addEventListener('click', function(){ openLightbox(p.img, p._id); });
-        attachLongPressDelete(img, 'photobooth', p._id, 'Hapus foto ini?');
-        grid.appendChild(img);
+      list.innerHTML='';
+      const total=photoEntries.length;
+      photoEntries.forEach(function(p, idx){
+        const row=document.createElement('div');
+        row.className='photo-row';
+
+        const info=document.createElement('div');
+        info.className='pr-info';
+        const name=document.createElement('div');
+        name.className='pr-name';
+        name.textContent='Foto '+(total-idx);
+        const date=document.createElement('div');
+        date.className='pr-date';
+        date.textContent=fmtDate(p.ts);
+        info.appendChild(name); info.appendChild(date);
+
+        const actions=document.createElement('div');
+        actions.className='pr-actions';
+        const viewBtn=document.createElement('button');
+        viewBtn.className='pr-btn'; viewBtn.textContent='👁 Lihat';
+        viewBtn.addEventListener('click', function(){ openLightbox(p.img, p._id); });
+        const dlBtn=document.createElement('button');
+        dlBtn.className='pr-btn pr-dl'; dlBtn.textContent='⬇ Unduh';
+        dlBtn.addEventListener('click', function(){ downloadPhoto(p.img, 'foto-naffa-'+(total-idx)+'.jpg'); });
+        actions.appendChild(viewBtn); actions.appendChild(dlBtn);
+
+        row.appendChild(info); row.appendChild(actions);
+        attachLongPressDelete(row, 'photobooth', p._id, 'Hapus foto ini?');
+        list.appendChild(row);
       });
     }
     const lastRead=getLastRead('photo');
@@ -743,19 +797,23 @@ function startPhotoList(){
     if(activeTabOf()==='photo'){ setBadge('badge-photo',0); }
     else{ setBadge('badge-photo',unread); }
   }, function(err){
-    grid.innerHTML='<div class="empty" style="grid-column:1/-1;">Gagal memuat foto — periksa koneksi.</div>';
+    list.innerHTML='<div class="empty">Gagal memuat foto — periksa koneksi.</div>';
     console.error(err);
   });
 }
 let lightboxPhotoId=null;
+let lightboxPhotoSrc=null;
 function openLightbox(src, photoId){
   lightboxPhotoId=photoId;
+  lightboxPhotoSrc=src;
   document.getElementById('pl-img').src=src;
-  document.getElementById('pl-download').href=src;
   document.getElementById('photo-lightbox').classList.add('show');
 }
 document.getElementById('pl-close').addEventListener('click', function(){
   document.getElementById('photo-lightbox').classList.remove('show');
+});
+document.getElementById('pl-download').addEventListener('click', function(){
+  if(lightboxPhotoSrc) downloadPhoto(lightboxPhotoSrc, 'foto-naffa.jpg');
 });
 document.getElementById('pl-delete').addEventListener('click', function(){
   if(!lightboxPhotoId) return;
