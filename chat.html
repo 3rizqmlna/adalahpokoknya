@@ -152,8 +152,14 @@ body{
 #photo-lightbox a{background:rgba(242,180,65,.22);border:1px solid rgba(242,180,65,.5);color:var(--gold-lt);
   border-radius:14px;padding:9px 20px;font-family:'Space Mono',monospace;font-size:.65rem;
   letter-spacing:1px;text-decoration:none;}
+.pl-del-btn{all:unset;box-sizing:border-box;background:rgba(232,96,76,.16);border:1px solid rgba(232,96,76,.45);
+  color:var(--rose);border-radius:14px;padding:9px 20px;font-family:'Space Mono',monospace;font-size:.65rem;
+  letter-spacing:1px;cursor:pointer;}
 #photo-lightbox .pl-close{position:absolute;top:18px;right:18px;background:none;border:none;
   color:rgba(255,253,247,.7);font-size:1.4rem;}
+
+/* Umpan-balik visual saat tekan-tahan untuk menghapus */
+.lp-pressing{opacity:.5!important;transform:scale(.96);transition:opacity .15s,transform .15s;}
 
 /* ===== Live panel ===== */
 #panel-live{align-items:center;justify-content:center;padding:24px;}
@@ -310,7 +316,10 @@ body{
 <div id="photo-lightbox">
   <button class="pl-close" id="pl-close">✕</button>
   <img id="pl-img" src="">
-  <a id="pl-download" download="foto-naffa.jpg">⬇ Unduh foto ini</a>
+  <div style="display:flex;gap:10px;">
+    <a id="pl-download" download="foto-naffa.jpg">⬇ Unduh foto ini</a>
+    <button id="pl-delete" class="pl-del-btn">🗑 Hapus foto ini</button>
+  </div>
 </div>
 
 <script>
@@ -320,7 +329,7 @@ body{
    (client-side) — cukup buat menghalau orang iseng yang kebetulan
    dapat link-nya, bukan enkripsi sungguhan.
    ================================================================== */
-const DASH_PIN = '20052007';
+const DASH_PIN = '070525';
 (function(){
   const gate=document.getElementById('pingate');
   const dash=document.getElementById('dash');
@@ -410,10 +419,10 @@ function setOverviewNew(elId, count){
 // ---------- Tab switching ----------
 const titles={
   overview:['Overview','ringkasan aktivitas Naffa di Taman Bulan'],
-  chat:['Balas Naffa','tersambung langsung ke Taman Bulan'],
-  rain:['Ruang Hujan','apa yang pernah Naffa lepaskan'],
-  letter:['Surat ke 2030','syukur, tujuan, dan pesan dari Naffa'],
-  photo:['Foto','jepretan Naffa dari Bilik Foto'],
+  chat:['Balas Naffa','tersambung langsung ke Taman Bulan · tekan & tahan pesan untuk hapus'],
+  rain:['Ruang Hujan','apa yang pernah Naffa lepaskan · tekan & tahan untuk hapus'],
+  letter:['Surat ke 2030','syukur, tujuan, dan pesan dari Naffa · tekan & tahan untuk hapus'],
+  photo:['Foto','jepretan Naffa dari Bilik Foto · tekan & tahan untuk hapus'],
   live:['Live','lihat stage yang sedang dibuka Naffa, real-time']
 };
 function switchTab(tab){
@@ -457,6 +466,36 @@ function downloadText(filename, content){
   URL.revokeObjectURL(url);
 }
 
+// ---------- Hapus lewat tekan-tahan (long-press), langsung ke Firestore ----------
+// Dipakai di semua panel (Chat, Ruang Hujan, Surat 2030, Foto) supaya Rizqi bisa
+// hapus data langsung dari dashboard tanpa perlu buka Firebase Console.
+function attachLongPressDelete(el, collection, docId, confirmMsg){
+  if(!docId) return; // tidak ada id (mis. data belum lengkap) — jangan pasang delete
+  let timer=null;
+  const LONG_PRESS_MS=550;
+  function start(e){
+    el.classList.add('lp-pressing');
+    timer=setTimeout(function(){
+      el.classList.remove('lp-pressing');
+      if(confirm(confirmMsg||'Hapus ini? Tindakan ini tidak bisa dibatalkan.')){
+        db.collection(collection).doc(docId).delete().catch(function(err){
+          alert('Gagal menghapus, coba lagi.');
+          console.error(err);
+        });
+      }
+    }, LONG_PRESS_MS);
+  }
+  function cancel(){
+    clearTimeout(timer);
+    el.classList.remove('lp-pressing');
+  }
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', cancel);
+  el.addEventListener('pointerleave', cancel);
+  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+
 // ---------- Chat ----------
 let chatStarted=false;
 let chatEntries=[];
@@ -488,6 +527,7 @@ function startChat(){
     chatEntries=[];
     snap.forEach(function(doc){
       const m=doc.data();
+      m._id=doc.id;
       chatEntries.push(m);
       const isRizqi=(m.sender==='rizqi');
       const row=document.createElement('div');
@@ -502,6 +542,7 @@ function startChat(){
         if(!isNaN(d)) meta.textContent=d.toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
         row.appendChild(meta);
       }
+      attachLongPressDelete(row, 'live_chat', doc.id, 'Hapus pesan ini?');
       body.appendChild(row);
     });
     body.scrollTop=body.scrollHeight;
@@ -581,6 +622,7 @@ function renderRainList(filter){
     text.className='e-text';
     text.textContent=m.text||'';
     card.appendChild(date); card.appendChild(text);
+    attachLongPressDelete(card, 'releases', m._id, 'Hapus entri Ruang Hujan ini?');
     list.appendChild(card);
   });
 }
@@ -589,7 +631,7 @@ function startRainList(){
   rainStarted=true;
   db.collection('releases').orderBy('createdAt','desc').onSnapshot(function(snap){
     rainEntries=[];
-    snap.forEach(function(doc){ rainEntries.push(doc.data()); });
+    snap.forEach(function(doc){ const d=doc.data(); d._id=doc.id; rainEntries.push(d); });
     renderRainList(document.getElementById('rain-search').value);
     updateOverviewRain();
 
@@ -640,6 +682,7 @@ function renderLetterList(filter){
       txt.className='e-text'; txt.textContent=pair[1]||'';
       card.appendChild(lbl); card.appendChild(txt);
     });
+    attachLongPressDelete(card, 'future_letters', m._id, 'Hapus surat ke 2030 ini?');
     list.appendChild(card);
   });
 }
@@ -648,7 +691,7 @@ function startLetterList(){
   letterStarted=true;
   db.collection('future_letters').orderBy('writtenAt','desc').onSnapshot(function(snap){
     letterEntries=[];
-    snap.forEach(function(doc){ letterEntries.push(doc.data()); });
+    snap.forEach(function(doc){ const d=doc.data(); d._id=doc.id; letterEntries.push(d); });
     renderLetterList(document.getElementById('letter-search').value);
     updateOverviewLetter();
 
@@ -682,7 +725,7 @@ function startPhotoList(){
   const grid=document.getElementById('photo-grid');
   db.collection('photobooth').orderBy('ts','desc').onSnapshot(function(snap){
     photoEntries=[];
-    snap.forEach(function(doc){ photoEntries.push(doc.data()); });
+    snap.forEach(function(doc){ const d=doc.data(); d._id=doc.id; photoEntries.push(d); });
     if(!photoEntries.length){
       grid.innerHTML='<div class="empty" style="grid-column:1/-1;">Belum ada foto dari Bilik Foto ✦</div>';
     }else{
@@ -690,7 +733,8 @@ function startPhotoList(){
       photoEntries.forEach(function(p){
         const img=document.createElement('img');
         img.src=p.img; img.loading='lazy';
-        img.addEventListener('click', function(){ openLightbox(p.img); });
+        img.addEventListener('click', function(){ openLightbox(p.img, p._id); });
+        attachLongPressDelete(img, 'photobooth', p._id, 'Hapus foto ini?');
         grid.appendChild(img);
       });
     }
@@ -703,13 +747,23 @@ function startPhotoList(){
     console.error(err);
   });
 }
-function openLightbox(src){
+let lightboxPhotoId=null;
+function openLightbox(src, photoId){
+  lightboxPhotoId=photoId;
   document.getElementById('pl-img').src=src;
   document.getElementById('pl-download').href=src;
   document.getElementById('photo-lightbox').classList.add('show');
 }
 document.getElementById('pl-close').addEventListener('click', function(){
   document.getElementById('photo-lightbox').classList.remove('show');
+});
+document.getElementById('pl-delete').addEventListener('click', function(){
+  if(!lightboxPhotoId) return;
+  if(confirm('Hapus foto ini?')){
+    db.collection('photobooth').doc(lightboxPhotoId).delete().then(function(){
+      document.getElementById('photo-lightbox').classList.remove('show');
+    }).catch(function(e){ alert('Gagal menghapus, coba lagi.'); console.error(e); });
+  }
 });
 
 // ---------- Live ----------
