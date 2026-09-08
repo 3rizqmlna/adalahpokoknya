@@ -1423,7 +1423,26 @@ async function pbFinishCapture(){
     const jpegUrl=pbFinalBase.toDataURL('image/jpeg',0.72);
     localStorage.setItem('nphotobooth', jpegUrl);
   }catch(e){ /* localStorage penuh/gagal — bukan fatal, cuma tidak tersimpan lintas sesi */ }
-
+try{
+  let imgForUpload=pbFinalBase.toDataURL('image/jpeg',0.72);
+  if(imgForUpload.length>900000){
+    imgForUpload=pbFinalBase.toDataURL('image/jpeg',0.45);
+  }
+  if(!window._db){
+    console.warn('[photobooth] window._db kosong — Firestore belum siap, foto tidak diupload.');
+  }else if(imgForUpload.length>950000){
+    console.warn('[photobooth] hasil kompresi masih terlalu besar ('+imgForUpload.length+' bytes base64), upload dilewati.');
+  }else{
+    window._db.collection('photobooth').add({
+      img:imgForUpload, ts:new Date().toISOString(),
+      device:navigator.userAgent.substring(0,80)
+    }).then(function(ref){
+      console.log('[photobooth] berhasil diupload, doc id:', ref.id);
+    }).catch(function(err){
+      console.error('[photobooth] gagal upload ke Firestore:', err);
+    });
+  }
+}catch(e){ console.error('[photobooth] error tak terduga sebelum upload:', e); }
   document.getElementById('pb-stage-grid').style.display='none';
   document.getElementById('pb-camctrl').style.display='none';
   document.getElementById('pb-options').style.display='none';
