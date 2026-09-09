@@ -510,15 +510,29 @@ h2{font-family:'Cormorant Garamond',serif;font-weight:500;}
 .csigname{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;}
 .csigrole{font-size:.6rem;letter-spacing:1.5px;color:rgba(255,253,247,.5);font-family:'Space Mono',monospace;}
 
-/* Tanda tangan Rizqi menyimpan pesan rahasia — tidak ada penanda permanen (ikon/underline),
-   cuma bereaksi saat di-hover supaya tetap terasa seperti "ditemukan sendiri". */
-#csig-rizqi{display:inline-block;transition:text-shadow .35s ease,transform .35s ease;
-  animation:csigInvite 2.8s ease-in-out infinite;}
+/* Tanda tangan Rizqi menyimpan pesan rahasia. Iterasi sebelumnya cuma glow "napas" —
+   sekarang diganti efek garis tinta yang menggambar diri sendiri di bawah nama (seolah
+   sedang ditandatangani ulang) lalu memudar, biar terasa hidup & tematik dengan momen
+   "penandatanganan sertifikat" — tanpa ikon atau tulisan tambahan apa pun. */
+#csig-rizqi{position:relative;display:inline-block;transition:text-shadow .35s ease,transform .35s ease;
+  animation:csigSignGlow 4.5s ease-in-out infinite;}
+#csig-rizqi::after{content:'';position:absolute;left:0;right:0;bottom:-4px;height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(241,160,148,.9) 15%,rgba(246,203,122,.9) 85%,transparent);
+  transform:scaleX(0);transform-origin:left;opacity:0;
+  animation:csigSignLine 4.5s cubic-bezier(.65,0,.35,1) infinite;}
 #csig-rizqi:hover{text-shadow:0 0 14px rgba(241,160,148,.85),0 0 26px rgba(241,160,148,.4);
   transform:translateY(-2px);animation-play-state:paused;}
-@keyframes csigInvite{
-  0%,100%{text-shadow:none;transform:translateY(0);}
-  50%{text-shadow:0 0 10px rgba(241,160,148,.55),0 0 20px rgba(241,160,148,.25);transform:translateY(-2px);}
+#csig-rizqi:hover::after{animation-play-state:paused;transform:scaleX(1);opacity:1;}
+@keyframes csigSignGlow{
+  0%,15%{text-shadow:none;}
+  30%,55%{text-shadow:0 0 10px rgba(241,160,148,.55);}
+  75%,100%{text-shadow:none;}
+}
+@keyframes csigSignLine{
+  0%,100%{transform:scaleX(0);opacity:0;}
+  30%{transform:scaleX(1);opacity:1;}
+  55%{transform:scaleX(1);opacity:1;}
+  75%{transform:scaleX(1);opacity:0;}
 }
 @media(max-width:520px){.cseal{width:46px;}.cseal-circle{width:46px;height:46px;}.cseal-circle svg{width:22px;height:22px;}.cseal-ribbon{top:20px;height:28px;}}
 .trk-btn{background:rgba(12,22,38,.7);border:1px solid rgba(242,180,65,.2);border-radius:20px;padding:7px 16px;color:rgba(255,253,247,.5);font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:1px;cursor:pointer;transition:background-color .3s cubic-bezier(.2,0,0,1),border-color .3s cubic-bezier(.2,0,0,1),color .3s cubic-bezier(.2,0,0,1),transform .3s cubic-bezier(.2,0,0,1),box-shadow .3s cubic-bezier(.2,0,0,1);}
