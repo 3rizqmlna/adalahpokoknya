@@ -444,7 +444,18 @@ function switchTab(tab){
   document.getElementById('page-sub').textContent=t[1];
 
   // Buka tab = tandai sudah dibaca, hilangkan badge-nya
-  if(tab==='chat'){ setLastRead('chat', chatEntries.length?chatEntries[chatEntries.length-1].ts:''); setBadge('badge-chat',0); setOverviewNew('ov-chat-new',0); }
+  if(tab==='chat'){
+    setLastRead('chat', chatEntries.length?chatEntries[chatEntries.length-1].ts:''); setBadge('badge-chat',0); setOverviewNew('ov-chat-new',0);
+    // Tandai pesan Naffa yang belum ber-readAt sebagai sudah dibaca (centang biru
+    // di sisi dia) — dilakukan sekali saat tab dibuka, bukan tiap snapshot.
+    try{
+      db.collection('live_chat').where('sender','==','naffa').get().then(function(snap){
+        var batch=db.batch(), any=false;
+        snap.forEach(function(doc){ if(!doc.data().readAt){ batch.update(doc.ref,{readAt:new Date().toISOString()}); any=true; } });
+        if(any) batch.commit().catch(function(){});
+      }).catch(function(){});
+    }catch(e){}
+  }
   if(tab==='rain'){ setLastRead('rain', rainEntries.length?rainEntries[0].createdAt:''); setBadge('badge-rain',0); setOverviewNew('ov-rain-new',0); }
   if(tab==='letter'){ setLastRead('letter', letterEntries.length?letterEntries[0].writtenAt:''); setBadge('badge-letter',0); setOverviewNew('ov-letter-new',0); }
   if(tab==='photo'){ setLastRead('photo', photoEntries.length?photoEntries[0].ts:''); setBadge('badge-photo',0); }
@@ -550,6 +561,12 @@ function startChat(){
         meta.className='meta';
         const d=new Date(m.ts);
         if(!isNaN(d)) meta.textContent=d.toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+        if(isRizqi){
+          const tick=document.createElement('span');
+          tick.style.cssText='margin-left:5px;font-size:.85em;'+(m.readAt?'color:#5FAEDB;':'color:rgba(255,253,247,.4);');
+          tick.textContent=m.readAt?'✓✓':'✓';
+          meta.appendChild(tick);
+        }
         row.appendChild(meta);
       }
       attachLongPressDelete(row, 'live_chat', doc.id, 'Hapus pesan ini?');
@@ -593,9 +610,18 @@ document.getElementById('send').addEventListener('click', sendMsg);
 document.getElementById('msg').addEventListener('keydown', function(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
 });
+// Sinyal "sedang mengetik" — ditulis ringan (throttle ~1.5s) ke satu dokumen kecil
+// di Firestore, cuma berisi timestamp. Sisi Naffa yang nentuin kapan dianggap
+// "basi" (lihat initChatTyping di script.js), bukan dokumen ini yang dihapus.
+let _typingLastSent=0;
 document.getElementById('msg').addEventListener('input', function(){
   this.style.height='auto';
   this.style.height=Math.min(this.scrollHeight,100)+'px';
+  const now=Date.now();
+  if(now-_typingLastSent>1500){
+    _typingLastSent=now;
+    try{ db.collection('live_presence').doc('rizqi_typing').set({ts:new Date().toISOString()}).catch(function(){}); }catch(e){}
+  }
 });
 document.querySelectorAll('.qr-chip').forEach(function(chip){
   chip.addEventListener('click', function(){
