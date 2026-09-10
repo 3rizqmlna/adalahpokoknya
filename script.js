@@ -115,6 +115,7 @@ window.pzState={locked:0,dragging:null,baseLeft:0,baseTop:0,downX:0,downY:0};
       window.pzState.dragging=null;
     }
     window.pzState.locked=0;
+    window.pzState.startTime=Date.now();
     var board=document.getElementById('pz-board');
     var tray=document.getElementById('pz-tray');
     if(!board||!tray)return;
@@ -241,6 +242,7 @@ window.pzState={locked:0,dragging:null,baseLeft:0,baseTop:0,downX:0,downY:0};
       var fill=document.getElementById('pzFill');if(fill)fill.style.width=pct+'%';
       var txt=document.getElementById('pzTxt');if(txt)txt.textContent=window.pzState.locked+'/'+TOTAL;
       if(typeof sfx==='function')sfx('ok');
+      if(navigator.vibrate)navigator.vibrate(30);
       if(window.pzState.locked===TOTAL){
         setTimeout(function(){
           if(typeof sfx==='function')sfx('win');
@@ -253,6 +255,20 @@ window.pzState={locked:0,dragging:null,baseLeft:0,baseTop:0,downX:0,downY:0};
           var hb=document.getElementById('pzHintBox');if(hb)hb.style.display='none';
           document.querySelector('#spz .pz-wrap .btn-hint').style.display='none';
           var suc=document.getElementById('pzSuccess');if(suc)suc.style.display='flex';
+          // Waktu terbaik puzzle disimpan ringan di localStorage (bukan Firestore —
+          // ini cuma polesan kecil buat Naffa sendiri, bukan data yang perlu diteruskan).
+          try{
+            var elapsed=Math.max(1,Math.round((Date.now()-(window.pzState.startTime||Date.now()))/1000));
+            var bestKey='nm_pz_besttime';
+            var prevBest=parseInt(localStorage.getItem(bestKey)||'0',10);
+            var isNewBest=!prevBest||elapsed<prevBest;
+            if(isNewBest)localStorage.setItem(bestKey,String(elapsed));
+            var bt=document.getElementById('pzBestTime');
+            if(bt){
+              bt.style.display='block';
+              bt.textContent=isNewBest?('✦ rekor baru: '+elapsed+' detik'):('waktumu: '+elapsed+'s · rekor terbaik: '+prevBest+'s');
+            }
+          }catch(e){}
           pzBurst();
         },400);
       }
@@ -621,7 +637,7 @@ const am=document.getElementById('am');
 let cti=0,_au=false,_pp=null,bonusUnlocked=true; // semua lagu terbuka sejak awal — dipilih di stage SMUSIC sebelum taman dimulai
 let aCtx,anl,aData,micStr,micAnl,micData,micOn=false;
 let openedG=0,cdInt,ptmr=null,panim=null,figAnim=null,uAnim=null,figDone=false;
-let selF='',selA='',selD='The Wildflower Sovereign',selTarot='',selAffirm='';
+let selF='',selA='',selD='The Wildflower Sovereign',selTarot='',selAffirm='',selReflect='';
 const BIRTH=new Date("2007-01-23T00:00:00");
 
 (function bviz(){const w=document.getElementById('vzwrap');for(let i=0;i<8;i++){const b=document.createElement('div');b.className='vbar';b.id='vb'+i;w.appendChild(b);}})();
@@ -1450,6 +1466,57 @@ try{
   pbSetOptionsLocked(false);
   pbBusy=false;
   if(navigator.vibrate) navigator.vibrate([40,20,60]);
+  pbRenderRetakeStrip();
+}
+
+// ===== Ulangi 1 foto saja (bukan seluruh sesi) =====
+// Cuma tampil kalau template-nya multi-jepret (mode strip). Menimpa satu slot di
+// pbFrames lalu menyusun ulang hasil akhirnya — tidak menyentuh slot lain.
+function pbRenderRetakeStrip(){
+  var strip=document.getElementById('pb-retake-strip');
+  if(!strip) return;
+  var total=pbTotalShots();
+  if(total<=1 || !pbFrames.length){ strip.style.display='none'; strip.innerHTML=''; return; }
+  var html='';
+  for(var i=0;i<pbFrames.length;i++){
+    var src=pbFrames[i].toDataURL('image/jpeg',0.7);
+    html+='<div style="text-align:center;">'+
+      '<img src="'+src+'" style="width:50px;height:50px;object-fit:cover;border-radius:8px;border:1px solid rgba(246,203,122,.4);display:block;">'+
+      '<button onclick="pbRetakeSlot('+i+')" style="margin-top:4px;font-family:\'Space Mono\',monospace;font-size:.5rem;letter-spacing:1px;background:transparent;border:1px solid rgba(242,180,65,.35);border-radius:20px;padding:3px 9px;color:var(--gold-lt);cursor:pointer;">↻ foto '+(i+1)+'</button>'+
+      '</div>';
+  }
+  strip.innerHTML=html;
+  strip.style.display='flex';
+}
+
+function pbRetakeSlot(idx){
+  if(pbBusy||!pbStream) return;
+  pbBusy=true;
+  sfx('tr');
+  document.getElementById('pb-result').style.display='none';
+  document.getElementById('pb-stage-grid').style.display='flex';
+  document.getElementById('pb-camwrap').style.display='block';
+  document.getElementById('pb-camctrl').style.display='none';
+  document.getElementById('pb-options').style.display='none';
+  const cd=document.getElementById('pb-countdown'), sub=document.getElementById('pb-sub');
+  if(sub) sub.textContent='Bersiap mengambil ulang foto '+(idx+1)+'...';
+  let n=3;
+  cd.textContent=n; cd.classList.add('show');
+  try{sfx('tr');}catch(e){}
+  const iv=setInterval(function(){
+    n--;
+    if(n>0){ cd.textContent=n; try{sfx('tr');}catch(e){} }
+    else{
+      clearInterval(iv);
+      cd.textContent='✦'; try{sfx('win');}catch(e){}
+      pbFireFlash();
+      setTimeout(function(){
+        cd.classList.remove('show');
+        pbFrames[idx]=pbGrabFrame();
+        pbFinishCapture();
+      },220);
+    }
+  },700);
 }
 
 // ===== FILTER — diterapkan per foto, foto tetap utuh & jelas =====
@@ -2456,6 +2523,22 @@ function verify2(){const a=document.getElementById('cb').value.trim();if(a==='20
 function startCD(){
   setBG('moon');
   if(cdInt)clearInterval(cdInt);
+  // Fakta iseng dihitung sekali dari BIRTH — cuma perkiraan matematis ringan,
+  // bukan data baru, ditampilkan sekali di bawah counter tiap kali stage ini dibuka.
+  try{
+    var ff=document.getElementById('cdFunFact');
+    if(ff){
+      var totalDays=Math.floor((new Date()-BIRTH)/864e5);
+      var heartbeats=Math.round(totalDays*1440*72); // ±72 detak/menit rata-rata
+      var orbits=totalDays/365.25;
+      var facts=[
+        '✦ ±'+totalDays.toLocaleString('id-ID')+' hari sejak fajar itu.',
+        '✦ ±'+heartbeats.toLocaleString('id-ID')+' detak jantung telah menemanimu.',
+        '✦ Bumi sudah '+orbits.toFixed(1)+' kali mengelilingi matahari sejak kamu ada.'
+      ];
+      ff.textContent=facts[Math.floor(Math.random()*facts.length)];
+    }
+  }catch(e){}
   var prevCD={y:'',d:'',h:'',m:'',s:''};
   function tickVal(id,newVal,key){
     var el=document.getElementById(id);
@@ -2544,6 +2627,7 @@ function pickReflect(el){
   if(!el)return;
   document.querySelectorAll('.reflect-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
+  const rb=el.querySelector('b'); selReflect=rb?rb.textContent.trim():'';
   sfx('ok');
   const r=el.getBoundingClientRect();
   bloom(r.left+r.width/2,r.top+r.height/2,'#F2B441');
@@ -2567,13 +2651,22 @@ function trigLetter(){
   const paras=["Naffa, hari ini aku mau sedikit merayakan dirimu. Merayakan setiap langkah yang sudah kamu ambil sampai di titik ini, setiap usaha yang kamu lakukan dan kamu jalani setiap hari yang membuatmu terus bertumbuh jadi lebih baik dari waktu ke waktu. Sebelumnya aku mau minta maaf karena beberapa tahun kebelakang mungkin terkesan sombong dan minta maaf barangkali ada salah yang di sengaja maupun di sengaja karena nggak mungkin tidak sengaja.","Aku memang tidak tahu detail kesibukanmu sehari-hari, tapi dari jauh aku selalu berharap kamu baik-baik saja, bahkan lebih dari sekedar baik-baik saja. Semoga setiap harimu selalu ada hal kecil yang bikin kamu senyum tanpa alasan jelas, entah itu secangkir minuman favoritmu yang pas banget rasanya, obrolan hangat sama orang yang kamu sayangi, atau sekedar langit sore yang kebetulan bagus dan bikin hati tenang. Semoga kamu selalu dikelilingi orang-orang yang benar-benar ada buat kamu, yang mendengarkan tanpa menghakimi, dan yang tetap tinggal di saat-saat yang tidak mudah.","Kalau ada hari yang terasa berat dan segalanya terkesan numpuk jadi satu, semoga kamu ingat kamu sudah melewati banyak hal sebelumnya, dan setiap kali kamu selalu berhasil melewatinya, meskipun waktu itu kamu mungkin merasa tidak akan sanggup. Kamu jauh lebih kuat dari yang kamu kira, dan lebih dari cukup dari apa yang pernah kamu ragukan tentang dirimu sendiri. Semoga kamu tidak pernah terlalu keras sama diri sendiri. Semoga kamu bisa istirahat tanpa rasa bersalah, bisa menangis tanpa merasa harus terlihat kuat, dan bisa bangkit lagi dengan ritme dan caramu sendiri.","Untuk kuliahmu, semoga setiap ilmu yang kamu pelajari terasa bermakna, bukan sekedar tugas yang harus diselesaikan. Semoga usaha-usahamu, sekecil apa pun, selalu berujung pada hasil yang sepadan. Semoga kamu dikelilingi teman-teman yang baik dan suportif, yang ikut senang atas pencapaianmu tanpa iri, dan semoga cita-citamu pelan-pelan menemukan jalannya satu per satu, meskipun mungkin tidak selalu sesuai rencana awal. Jangan menyerah di tengah jalan, karena kamu punya lebih dari cukup untuk sampai ke tujuan.","Semoga ke depannya kamu selalu diberi kesehatan yang cukup untuk menjalani semua rencana dan mimpimu, ketenangan yang tidak goyah oleh hal-hal kecil, dan kebahagiaan yang bukan cuma kelihatan bahagia dari luar, tapi benar-benar kamu rasakan sampai ke dalam hati. Semoga setiap doa yang pernah kamu panjatkan diam-diam, yang mungkin cuma kamu dan Tuhan yang tahu, dijawab dengan cara yang paling indah. Dan di mana pun kamu berada nanti, apa pun yang sedang kamu jalani, semoga kamu selalu menemukan alasan untuk tetap bersyukur dan terus melangkah maju, sekecil apa pun langkah itu.","Oh iya, Sedikit doa kecil dariku semoga kamu nggak pernah kehujanan pas keluar rumah tanpa bawa payung. Semoga lampu merah selalu berubah hijau tepat saat kamu lewat, jadi nggak perlu buru-buru. Semoga kelingkingmu nggak pernah kejedot meja seumur hidup. Semoga makanan yang kamu pesan selalu enak dan porsinya pas, nggak kurang nggak lebih. Semoga kamu nggak pernah lupa naruh barang di mana, dan baterai hp-mu nggak pernah habis di saat yang paling nggak tepat. Semoga kamu selalu dapat tempat duduk waktu naik kendaraan umum, meskipun lagi rame-ramenya. Dan semoga hal-hal kecil yang biasanya bikin hari kamu jadi kesel itu jarang-jarang menghampirimu, karena kamu memang sudah layak dapat hari yang tenang dan menyenangkan setiap harinya.","Hadiah ini mungkin sederhana, dan mungkin bukan sesuatu yang mewah. Tapi ini hadiah pertama yang pernah aku buat sendiri untukmu, dibuat pelan-pelan dan sepenuh hati, dari sahabat kecilmu yang katanya SOMBONG."];
   window._letterParas = paras;
   window._letterSkipped = false;
+  // Total karakter seluruh surat — dipakai buat progress bar baca di bawah judul,
+  // dihitung sekali dari isi surat itu sendiri, bukan dari posisi scroll (karena
+  // surat ini muncul lewat efek mengetik, bukan discroll manual).
+  var _s8TotalChars = paras.reduce(function(a,p){return a+p.length;},0)||1;
+  var _s8FillReset=document.getElementById('s8-progress-fill'); if(_s8FillReset)_s8FillReset.style.width='0%';
+  function _s8UpdateProgress(charsDone){
+    var fill=document.getElementById('s8-progress-fill');
+    if(fill)fill.style.width=Math.min(100,Math.round(charsDone/_s8TotalChars*100))+'%';
+  }
   // Tampilkan tombol skip setelah 3 detik
   setTimeout(function(){ var sb=document.getElementById('skip-letter-btn'); if(sb&&!window._letterSkipped) sb.style.display='block'; }, 3000);
   const cont=document.getElementById('lparas');cont.innerHTML='';let pi=0,ci=0;
   setTimeout(()=>{
     let cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);
-    function ty(){if(pi<paras.length){if(ci<paras[pi].length){cp.innerHTML+=paras[pi][ci++];const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;if(!window._letterSkipped)setTimeout(ty,22);}else{pi++;ci=0;if(pi<paras.length){cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;if(!window._letterSkipped)setTimeout(ty,350);}else{document.getElementById('lsig').style.opacity='1';const sh=document.getElementById('scroll-hint');if(sh)sh.style.opacity='0';setTimeout(()=>{const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;document.getElementById('nfl').style.display='inline-flex';const sb=document.getElementById('skip-letter-btn');if(sb)sb.style.display='none';},800);}}}
-    }ty();
+    function ty(){if(pi<paras.length){if(ci<paras[pi].length){cp.innerHTML+=paras[pi][ci++];const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;var _done=0;for(var _k=0;_k<pi;_k++)_done+=paras[_k].length;_s8UpdateProgress(_done+ci);if(!window._letterSkipped)setTimeout(ty,22);}else{pi++;ci=0;if(pi<paras.length){cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;if(!window._letterSkipped)setTimeout(ty,350);}else{_s8UpdateProgress(_s8TotalChars);document.getElementById('lsig').style.opacity='1';const sh=document.getElementById('scroll-hint');if(sh)sh.style.opacity='0';setTimeout(()=>{const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;document.getElementById('nfl').style.display='inline-flex';const sb=document.getElementById('skip-letter-btn');if(sb)sb.style.display='none';},800);}}}
+    }_s8UpdateProgress(0);ty();
   },11500);
 }
 
@@ -2942,7 +3035,7 @@ function goS13(){
   setBG('cert');sfx('tr');
   if(navigator.vibrate)navigator.vibrate([60,30,60,30,120]);
   const t=document.getElementById('s13');
-  if(t){t.classList.add('active');setTimeout(()=>confetti(),600);}
+  if(t){t.classList.add('active');setTimeout(()=>confetti(destinyColor()),600);}
   bonusUnlocked=true;
   try{
     const firstTime=!localStorage.getItem('nbu');
@@ -2958,7 +3051,36 @@ function goS13(){
       savedAt:new Date().toISOString()
     }));
   }catch(e){}
+  renderS13Recap();
   const i=STAGES.indexOf('s13');if(i>=0)setTimeout(()=>updProg(i),800);
+}
+
+// Kilas balik kecil di stage sertifikat — menarik ulang pilihan/hasil dari
+// beberapa stage sebelumnya (refleksi s3b, kartu tarot str, foto photobooth),
+// bukan data baru, cuma dikumpulkan lagi di satu tempat sebagai penutup.
+function renderS13Recap(){
+  var wrap=document.getElementById('s13-recap');
+  if(!wrap) return;
+  var chips=[];
+  if(selReflect){
+    chips.push('<div style="background:rgba(242,180,65,.08);border:1px solid rgba(242,180,65,.25);border-radius:12px;padding:8px 14px;font-family:\'Space Mono\',monospace;font-size:.58rem;letter-spacing:.5px;color:var(--gold-lt);">✦ Hal besar bagimu: <b>'+selReflect+'</b></div>');
+  }
+  if(selTarot){
+    var tarotShort=selTarot.split(' — ')[0];
+    chips.push('<div style="background:rgba(143,203,234,.08);border:1px solid rgba(143,203,234,.25);border-radius:12px;padding:8px 14px;font-family:\'Space Mono\',monospace;font-size:.58rem;letter-spacing:.5px;color:#8FCBEA;">🔮 Kartu pilihanmu: <b>'+tarotShort+'</b></div>');
+  }
+  try{
+    var photo=localStorage.getItem('nphotobooth');
+    if(photo){
+      chips.push('<img src="'+photo+'" style="width:52px;height:52px;object-fit:cover;border-radius:12px;border:1px solid rgba(246,203,122,.4);vertical-align:middle;" alt="Kenangan photobooth">');
+    }
+  }catch(e){}
+  if(chips.length){
+    wrap.innerHTML=chips.join('');
+    wrap.style.display='flex';
+  } else {
+    wrap.style.display='none';
+  }
 }
 
 // ===== KUNJUNGAN ULANG (setelah hari-H) =====
@@ -3158,7 +3280,14 @@ function jumpToMemoryBook(){
 }
 
 // CONFETTI
-function confetti(){const c=document.getElementById('cconf');if(!c)return;c.style.display='block';c.width=window.innerWidth;c.height=window.innerHeight;const ctx=c.getContext('2d'),cols=['#E8604C','#F1A094','#F2B441','#F6CB7A','#7FAE6A','#B2CEA6','#5FAEDB','#FFFDF7'],ps=[];for(let i=0;i<160;i++)ps.push({x:Math.random()*c.width,y:-20-Math.random()*200,w:Math.random()*8+4,h:Math.random()*5+2.5,col:cols[Math.floor(Math.random()*cols.length)],vy:Math.random()*3.5+1.5,vx:Math.random()*2.5-1.25,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.12,al:1});let fr=0;function cl(){ctx.clearRect(0,0,c.width,c.height);fr++;ps.forEach(p=>{p.y+=p.vy;p.x+=p.vx+Math.sin(fr*.01+p.rot)*.4;p.rot+=p.rs;if(fr>100)p.al-=.007;if(p.y>c.height){p.y=-20;p.al=1;}ctx.save();ctx.globalAlpha=Math.max(0,p.al);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});if(fr<200)requestAnimationFrame(cl);else{ctx.clearRect(0,0,c.width,c.height);c.style.display='none';}}cl();}
+// Warna takdir (dari pilihan kartu/simbol di stage sebelumnya) dipakai untuk
+// menonjolkan sedikit warna confetti di sertifikat akhir — pilihan Naffa di awal
+// jadi diam-diam "mewarnai" salah satu momen di akhir perjalanan.
+function destinyColor(){
+  var map={'The Moonlit Gardener':'#8FCBEA','The Botanical Dreamer':'#7FAE6A','The Wildflower Sovereign':'#F2B441'};
+  return (typeof selD!=='undefined'&&map[selD])?map[selD]:null;
+}
+function confetti(accentColor){const c=document.getElementById('cconf');if(!c)return;c.style.display='block';c.width=window.innerWidth;c.height=window.innerHeight;const ctx=c.getContext('2d');var cols=['#E8604C','#F1A094','#F2B441','#F6CB7A','#7FAE6A','#B2CEA6','#5FAEDB','#FFFDF7'];if(accentColor)cols=cols.concat([accentColor,accentColor,accentColor]);const ps=[];for(let i=0;i<160;i++)ps.push({x:Math.random()*c.width,y:-20-Math.random()*200,w:Math.random()*8+4,h:Math.random()*5+2.5,col:cols[Math.floor(Math.random()*cols.length)],vy:Math.random()*3.5+1.5,vx:Math.random()*2.5-1.25,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.12,al:1});let fr=0;function cl(){ctx.clearRect(0,0,c.width,c.height);fr++;ps.forEach(p=>{p.y+=p.vy;p.x+=p.vx+Math.sin(fr*.01+p.rot)*.4;p.rot+=p.rs;if(fr>100)p.al-=.007;if(p.y>c.height){p.y=-20;p.al=1;}ctx.save();ctx.globalAlpha=Math.max(0,p.al);ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});if(fr<200)requestAnimationFrame(cl);else{ctx.clearRect(0,0,c.width,c.height);c.style.display='none';}}cl();}
 
 // SAVE PNG
 function claimVoucher(type,btn){
@@ -4079,6 +4208,24 @@ function openReplyModal(){
   if(!modal) return;
   modal.style.display='flex';
   try{sfx('tr');}catch(e){}
+  // Naffa baru saja lihat chat-nya sendiri — tandai semua balasan Rizqi
+  // sampai detik ini sebagai "sudah dibaca" dan matikan badge kecilnya.
+  try{
+    localStorage.setItem('nm_chat_lastread', new Date().toISOString());
+    const badge=document.getElementById('chat-badge');
+    if(badge) badge.style.display='none';
+  }catch(e){}
+  // Tandai balasan Rizqi yang belum ber-readAt sebagai sudah dibaca (biar dia
+  // lihat centang biru di sisi dashboard-nya) — sekali per pembukaan modal.
+  try{
+    if(window._db){
+      window._db.collection('live_chat').where('sender','==','rizqi').get().then(function(snap){
+        var batch=window._db.batch(), any=false;
+        snap.forEach(function(doc){ if(!doc.data().readAt){ batch.update(doc.ref,{readAt:new Date().toISOString()}); any=true; } });
+        if(any) batch.commit().catch(function(){});
+      }).catch(function(){});
+    }
+  }catch(e){}
   // Notifikasi ke Rizqi SETIAP KALI Naffa membuka sesi chat (buka-tutup
   // berkali-kali = notif berkali-kali) — isi pesannya sendiri tetap tidak
   // diteruskan ke Telegram, cuma event "membuka chat"-nya saja.
@@ -4099,6 +4246,12 @@ function openReplyModal(){
       const row=document.createElement('div');
       row.style.cssText='max-width:80%;padding:9px 14px;border-radius:15px;font-family:\'Cormorant Garamond\',serif;font-size:.9rem;line-height:1.5;word-wrap:break-word;white-space:pre-wrap;align-self:'+(isNaffa?'flex-end':'flex-start')+';background:'+(isNaffa?'rgba(242,180,65,.18)':'rgba(127,174,106,.16)')+';border:1px solid '+(isNaffa?'rgba(242,180,65,.3)':'rgba(127,174,106,.28)')+';color:var(--cream);';
       row.textContent=m.text||'';
+      if(isNaffa){
+        const tick=document.createElement('span');
+        tick.style.cssText='display:inline-block;margin-left:6px;font-size:.75em;'+(m.readAt?'color:#5FAEDB;':'color:rgba(255,253,247,.4);');
+        tick.textContent=m.readAt?'✓✓':'✓';
+        row.appendChild(tick);
+      }
       body.appendChild(row);
     });
     body.scrollTop=body.scrollHeight;
@@ -4133,6 +4286,68 @@ async function sendSecretReply(){
   // sekali saat sesi chat dibuka (lihat openReplyModal). Pesan tetap tersimpan
   // aman di Firestore ('live_chat') dan bisa dibaca lewat chat.html.
 }
+
+// ===== Badge kecil "pesan baru" di tombol Chat =====
+// Dengar koleksi live_chat terus-menerus (bukan cuma saat modal chat dibuka),
+// bandingkan balasan terbaru dari Rizqi dengan waktu terakhir Naffa membuka
+// chat (disimpan di localStorage). Kalau ada yang lebih baru → nyalakan titik
+// merah kecil di tombol 💬 Chat. Titik ini mati sendiri begitu chat dibuka
+// (lihat openReplyModal). Ringan & terpisah dari listener render pesan.
+(function initChatBadge(){
+  var LASTREAD_KEY='nm_chat_lastread';
+  function waitDb(n){
+    if(window._db){ start(); return; }
+    if(n>40) return; // Firebase gagal dimuat — badge diam saja, tidak fatal
+    setTimeout(function(){ waitDb(n+1); }, 150);
+  }
+  function start(){
+    try{
+      window._db.collection('live_chat').orderBy('ts','asc').onSnapshot(function(snap){
+        var lastRead=localStorage.getItem(LASTREAD_KEY)||'';
+        var hasUnread=false;
+        snap.forEach(function(doc){
+          var m=doc.data();
+          if(m.sender==='rizqi' && m.ts && m.ts>lastRead) hasUnread=true;
+        });
+        var badge=document.getElementById('chat-badge');
+        if(badge) badge.style.display=hasUnread?'block':'none';
+      }, function(){ /* offline/gagal — biarkan, tidak fatal */ });
+    }catch(e){}
+  }
+  waitDb(0);
+})();
+
+// ===== Indikator "Rizqi sedang mengetik..." =====
+// Dengar satu dokumen kecil (live_presence/rizqi_typing) yang di-update chat.html
+// tiap Rizqi mengetik. Timestamp yang lebih baru dari ~3 detik dianggap "masih
+// mengetik"; auto-hilang lewat timeout lokal kalau tidak ada update baru lagi
+// (bukan Firestore yang menghapusnya — dokumennya memang dibiarkan apa adanya).
+(function initChatTyping(){
+  var STALE_MS=3000;
+  var hideTimer=null;
+  function waitDb(n){
+    if(window._db){ start(); return; }
+    if(n>40) return;
+    setTimeout(function(){ waitDb(n+1); }, 150);
+  }
+  function start(){
+    try{
+      window._db.collection('live_presence').doc('rizqi_typing').onSnapshot(function(doc){
+        if(!doc.exists) return;
+        var d=doc.data();
+        var age=Date.now()-new Date(d.ts).getTime();
+        var el=document.getElementById('chat-typing-indicator');
+        if(!el) return;
+        if(age<STALE_MS){
+          el.style.display='block';
+          if(hideTimer)clearTimeout(hideTimer);
+          hideTimer=setTimeout(function(){ el.style.display='none'; }, STALE_MS-age);
+        }
+      }, function(){ /* offline/gagal — biarkan, tidak fatal */ });
+    }catch(e){}
+  }
+  waitDb(0);
+})();
 document.addEventListener('DOMContentLoaded', function(){
   const ta=document.getElementById('reply-text');
   if(ta) ta.addEventListener('keydown', function(e){
@@ -4358,6 +4573,7 @@ function skipLetter(){
   // Isi ulang semua paragraf sekaligus tanpa animasi
   var paras=window._letterParas||[];
   paras.forEach(function(p){ var d=document.createElement('div'); d.className='lpara'; d.innerHTML=p; if(lp) lp.appendChild(d); });
+  var s8Fill=document.getElementById('s8-progress-fill'); if(s8Fill) s8Fill.style.width='100%';
   if(sig){ sig.style.opacity='1'; sig.style.transition='none'; }
   if(sh) sh.style.opacity='0';
   if(nfl) nfl.style.display='inline-flex';
