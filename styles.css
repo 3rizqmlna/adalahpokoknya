@@ -948,3 +948,18 @@ h2{font-family:'Cormorant Garamond',serif;font-weight:500;}
   @keyframes hintPulse{0%,100%{opacity:.5}50%{opacity:.85}}
 
 @keyframes s11RingBreathe{0%{opacity:.55;transform:translate(-50%,-50%) scale(.9);}100%{opacity:1;transform:translate(-50%,-50%) scale(1.06);}}
+
+/* Badge kecil "pesan baru" di tombol Chat — nyala kalau ada balasan Rizqi yang belum dibuka */
+.chat-badge{
+  position:absolute;
+  top:-3px;
+  right:-3px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#E8604C;
+  box-shadow:0 0 6px rgba(232,96,76,.8);
+  animation:chatBadgePulse 1.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes chatBadgePulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.2);opacity:.75;}}
