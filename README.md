@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌙✨ Taman Bulan · Naffa
+# ✨ Taman Bulan 🌙
 
 ### Situs ulang tahun interaktif — 20 stage, sertifikat, photobooth, dan live chat.
 
