@@ -296,6 +296,7 @@ html.nm-revisit #welcomeback{opacity:1!important;pointer-events:auto!important;t
     <div class="tblock"><span class="tval" id="cds">00</span><span class="tlbl">Detik</span></div>
   </div>
   <p style="font-size:.62rem;font-family:'Space Mono',monospace;color:rgba(242,180,65,.4);letter-spacing:1.5px;" id="livems">Menghitung waktu...</p>
+  <p style="font-size:.68rem;font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(255,253,247,.5);letter-spacing:.5px;margin-top:6px;" id="cdFunFact"></p>
   <button class="btn btn-bl" onclick="if(cdInt){clearInterval(cdInt);cdInt=null;}go('scd','str')" style="margin-top:20px;padding:12px 34px;">Masuki Gerbang Ramalan →</button>
 </div>
 
@@ -580,6 +581,7 @@ html.nm-revisit #welcomeback{opacity:1!important;pointer-events:auto!important;t
       <div class="pz-success-icon">🌸</div>
       <p class="pz-success-msg">Seperti bunga ini, kamu pun tumbuh dari kepingan-kepingan kecil menjadi sesuatu yang menakjubkan.</p>
       <p class="pz-success-sub">TAMAN TERSUSUN · JIWA MEKAR</p>
+      <p id="pzBestTime" style="display:none;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:1px;color:rgba(242,180,65,.7);margin-top:2px;"></p>
       <button class="btn btn-sg" onclick="go('spz','svg-screen')" style="margin-top:4px;">Rawat Taman Barumu →</button>
     </div>
   </div>
@@ -642,6 +644,9 @@ html.nm-revisit #welcomeback{opacity:1!important;pointer-events:auto!important;t
 <!-- S8 SURAT -->
 <div class="screen" id="s8">
   <div class="lyrline" id="lyrline"></div>
+  <div style="width:min(320px,80vw);height:2px;background:rgba(242,180,65,.15);border-radius:2px;margin:2px auto 8px;overflow:hidden;">
+    <div id="s8-progress-fill" style="height:100%;width:0%;background:var(--gold);transition:width .25s linear;"></div>
+  </div>
   <div class="lscroll" id="lbox"><div id="lparas"></div><div class="lsig" id="lsig"><div class="lsig-name">Rizqi Maulana</div></div></div>
   <div id="scroll-hint" style="font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:2px;color:rgba(242,180,65,.4);margin-top:6px;opacity:1;transition:opacity .5s;animation:hintPulse 2s ease-in-out infinite;">↓ surat masih berlanjut...</div>
   <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap;justify-content:center;">
@@ -1228,6 +1233,7 @@ void main() {
     <div class="pb-polaroid" id="pb-polaroid-wrap">
       <canvas id="pb-canvas"></canvas>
     </div>
+    <div id="pb-retake-strip" style="display:none;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;"></div>
     <input id="pb-caption" class="pb-caption-input" maxlength="60" placeholder="tulis caption di bawah foto (opsional)...">
     <div style="display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap;justify-content:center;">
       <button class="btn btn-sg" onclick="pbRetake()" style="padding:12px 28px;font-size:.7rem;">Ambil Ulang</button>
@@ -1259,6 +1265,9 @@ void main() {
       </div>
     </div>
   </div>
+  <!-- Kilas balik — potongan kecil dari beberapa stage sebelumnya, ditarik dari
+       data yang sudah ada (bukan stage baru), sekadar penutup yang terasa personal. -->
+  <div id="s13-recap" style="display:none;gap:10px;flex-wrap:wrap;justify-content:center;max-width:480px;margin:16px auto 0;"></div>
   <div style="display:flex;gap:12px;z-index:20;margin-top:14px;flex-wrap:wrap;justify-content:center;">
     <div class="save-menu-wrap" style="position:relative;">
       <button class="btn" id="save-menu-btn" onclick="toggleSaveMenu()" style="border-color:var(--rose);color:var(--rose-lt);padding:11px 26px;font-size:.72rem;"><svg viewBox="0 0 20 20" width="15" height="15" fill="none" style="vertical-align:middle;margin-right:5px"><rect x="3" y="3" width="14" height="14" rx="2" stroke="#F1A094" stroke-width="1.5"/><path d="M7 3v5h6V3" stroke="#F1A094" stroke-width="1.2"/><path d="M5 13h10v4H5z" fill="#F1A094" opacity=".5"/></svg>Simpan ▾</button>
@@ -1268,7 +1277,7 @@ void main() {
       </div>
     </div>
     <button class="btn" onclick="downloadSuratPDF(this)" style="border-color:var(--sage);color:var(--sage-lt);padding:11px 26px;font-size:.72rem;">📄 Surat 2030 (PDF)</button>
-    <button class="btn" onclick="openReplyModal()" style="border-color:rgba(232,96,76,.5);color:var(--rose-lt);padding:11px 26px;font-size:.72rem;">💬 Chat</button>
+    <button class="btn" onclick="openReplyModal()" style="border-color:rgba(232,96,76,.5);color:var(--rose-lt);padding:11px 26px;font-size:.72rem;position:relative;">💬 Chat<span id="chat-badge" class="chat-badge" style="display:none;"></span></button>
     <button class="btn" onclick="resetAllWithTrack()" style="border-color:rgba(255,253,247,.2);color:rgba(255,253,247,.5);padding:11px 26px;font-size:.72rem;"><svg viewBox="0 0 20 20" width="16" height="16" fill="none"><path d="M4 10 A6 6 0 1 1 10 16" stroke="#FFFDF7" stroke-width="2" stroke-linecap="round"/><path d="M4 13 L4 10 L7 10" stroke="#FFFDF7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Ulangi</button>
   </div>
   <p style="font-size:.58rem;opacity:.2;margin-top:14px;letter-spacing:2px;font-family:'Space Mono',monospace;">TAMAN BULAN · NAFFA BIRTHDAY EXPERIENCE · 2027</p>
@@ -1295,6 +1304,7 @@ void main() {
         <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;color:var(--cream);">Ngobrol sama penunggu Taman</h3>
       </div>
       <div id="chat-body-nm" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:8px;"><div style="margin:auto;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:rgba(255,253,247,.4);padding:20px;">Tulis sesuatu, Rizqi bisa balas kapan pun dia buka chatnya ✦</div></div>
+      <div id="chat-typing-indicator" style="display:none;padding:0 18px 4px;font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:1px;color:rgba(246,203,122,.65);font-style:italic;">Rizqi sedang mengetik...</div>
       <div style="display:flex;gap:8px;padding:12px;border-top:1px solid rgba(242,180,65,.15);flex-shrink:0;">
         <textarea id="reply-text" maxlength="500" rows="1" placeholder="Tulis di sini..." style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(242,180,65,.25);border-radius:22px;padding:11px 16px;color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:.92rem;resize:none;outline:none;max-height:90px;transition:border-color .2s cubic-bezier(.2,0,0,1),box-shadow .2s cubic-bezier(.2,0,0,1);"></textarea>
         <button id="reply-submit-btn" onclick="sendSecretReply()" style="background:linear-gradient(135deg,var(--gold),var(--gold-lt));border:none;border-radius:50%;width:40px;height:40px;flex-shrink:0;cursor:pointer;color:#0A1830;font-size:1rem;">➤</button>
