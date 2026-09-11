@@ -1006,7 +1006,7 @@ function _getSfxCtx(){
   }
   return _sfxCtx;
 }
-function sfx(t){try{const c=_getSfxCtx();if(!c)return;c.resume().then(()=>{if(t==='ok'){[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime+i*.06);g.gain.setValueAtTime(.06,c.currentTime+i*.06);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.06+.25);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.06);o.stop(c.currentTime+i*.06+.25);});}else if(t==='err'){const o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,c.currentTime);o.frequency.linearRampToValueAtTime(110,c.currentTime+.15);o.frequency.linearRampToValueAtTime(165,c.currentTime+.3);g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.35);o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+.35);}else if(t==='win'){[523.25,659.25,783.99,880,1046.5].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime+i*.08);g.gain.setValueAtTime(.07,c.currentTime+i*.08);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.08+.4);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.08);o.stop(c.currentTime+i*.08+.4);});}else{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(300,c.currentTime);o.frequency.exponentialRampToValueAtTime(600,c.currentTime+.5);g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+.5);}});}catch(e){}}
+function sfx(t){try{const c=_getSfxCtx();if(!c)return;c.resume().then(()=>{if(t==='ok'){[523.25,659.25,783.99,1046.5].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime+i*.06);g.gain.setValueAtTime(.06,c.currentTime+i*.06);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.06+.25);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.06);o.stop(c.currentTime+i*.06+.25);});}else if(t==='err'){const o=c.createOscillator(),g=c.createGain();o.type='sawtooth';o.frequency.setValueAtTime(220,c.currentTime);o.frequency.linearRampToValueAtTime(110,c.currentTime+.15);o.frequency.linearRampToValueAtTime(165,c.currentTime+.3);g.gain.setValueAtTime(.12,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.35);o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+.35);}else if(t==='win'){[523.25,659.25,783.99,880,1046.5].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,c.currentTime+i*.08);g.gain.setValueAtTime(.07,c.currentTime+i*.08);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.08+.4);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.08);o.stop(c.currentTime+i*.08+.4);});}else if(t==='shutter'){[0,.09].forEach((delay,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='square';o.frequency.setValueAtTime(i===0?1800:1200,c.currentTime+delay);g.gain.setValueAtTime(i===0?.16:.09,c.currentTime+delay);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+delay+.045);o.connect(g);g.connect(c.destination);o.start(c.currentTime+delay);o.stop(c.currentTime+delay+.05);});}else{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(300,c.currentTime);o.frequency.exponentialRampToValueAtTime(600,c.currentTime+.5);g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.5);o.connect(g);g.connect(c.destination);o.start(c.currentTime);o.stop(c.currentTime+.5);}});}catch(e){}}
 
 // STAGES
 const STAGES=['s1','s2','s2b','scd','str','sph','s3','s3b','sci','spz','svg-screen','srh','s8','sfl','s9','s9b','s10','s11','sphoto','s13'];
@@ -1309,7 +1309,7 @@ function pbCaptureSequence(index,total){
     if(n>0){ cd.textContent=n; try{sfx('tr');}catch(e){} }
     else{
       clearInterval(iv);
-      cd.textContent='✦'; try{sfx('win');}catch(e){}
+      cd.textContent='✦'; try{sfx('shutter');}catch(e){}
       pbFireFlash();
       setTimeout(function(){
         cd.classList.remove('show');
@@ -1355,7 +1355,7 @@ function pbUploadPhoto(evt){
       pbFrames.push(canvas);
       pbUpdateShotCounter(pbFrames.length);
       pbUpdateLivePreview();
-      try{sfx('win');}catch(e){}
+      try{sfx('shutter');}catch(e){}
       if(pbFrames.length>=pbTotalShots()){
         pbBusy=true; pbSetOptionsLocked(true);
         pbFinishCapture();
@@ -1508,7 +1508,7 @@ function pbRetakeSlot(idx){
     if(n>0){ cd.textContent=n; try{sfx('tr');}catch(e){} }
     else{
       clearInterval(iv);
-      cd.textContent='✦'; try{sfx('win');}catch(e){}
+      cd.textContent='✦'; try{sfx('shutter');}catch(e){}
       pbFireFlash();
       setTimeout(function(){
         cd.classList.remove('show');
@@ -2523,22 +2523,18 @@ function verify2(){const a=document.getElementById('cb').value.trim();if(a==='20
 function startCD(){
   setBG('moon');
   if(cdInt)clearInterval(cdInt);
-  // Fakta iseng dihitung sekali dari BIRTH — cuma perkiraan matematis ringan,
-  // bukan data baru, ditampilkan sekali di bawah counter tiap kali stage ini dibuka.
-  try{
-    var ff=document.getElementById('cdFunFact');
-    if(ff){
-      var totalDays=Math.floor((new Date()-BIRTH)/864e5);
-      var heartbeats=Math.round(totalDays*1440*72); // ±72 detak/menit rata-rata
-      var orbits=totalDays/365.25;
-      var facts=[
-        '✦ ±'+totalDays.toLocaleString('id-ID')+' hari sejak fajar itu.',
-        '✦ ±'+heartbeats.toLocaleString('id-ID')+' detak jantung telah menemanimu.',
-        '✦ Bumi sudah '+orbits.toFixed(1)+' kali mengelilingi matahari sejak kamu ada.'
-      ];
-      ff.textContent=facts[Math.floor(Math.random()*facts.length)];
-    }
-  }catch(e){}
+  // Detak jantung dihitung ulang tiap detik dari BIRTH — perkiraan matematis
+  // ringan (±72 bpm), jadi benar-benar berjalan langsung, bukan angka statis.
+  function updateHeartbeatFact(){
+    try{
+      var ff=document.getElementById('cdFunFact');
+      if(!ff) return;
+      var totalSeconds=(new Date()-BIRTH)/1000;
+      var heartbeats=Math.round(totalSeconds*1.2);
+      ff.textContent='✦ ±'+heartbeats.toLocaleString('id-ID')+' detak jantung telah menemanimu';
+    }catch(e){}
+  }
+  updateHeartbeatFact();
   var prevCD={y:'',d:'',h:'',m:'',s:''};
   function tickVal(id,newVal,key){
     var el=document.getElementById(id);
@@ -2563,6 +2559,7 @@ function startCD(){
     tickVal('cdm',String(n.getMinutes()).padStart(2,'0'),'m');
     tickVal('cds',String(n.getSeconds()).padStart(2,'0'),'s');
     document.getElementById('livems').textContent='Total: '+(n-BIRTH).toLocaleString('id-ID')+' milidetik mekar.';
+    updateHeartbeatFact();
   },1000);
 }
 
@@ -2660,12 +2657,29 @@ function trigLetter(){
     var fill=document.getElementById('s8-progress-fill');
     if(fill)fill.style.width=Math.min(100,Math.round(charsDone/_s8TotalChars*100))+'%';
   }
+  // Surat sekarang bisa discroll bebas — auto-ikut-turun cuma jalan selama dia
+  // memang lagi di dekat baris paling bawah. Begitu discroll ke atas buat baca
+  // ulang, auto-scroll berhenti sampai dia scroll balik ke bawah sendiri.
+  window._s8AutoFollow = true;
+  const lbEl=document.getElementById('lbox');
+  if(lbEl && !lbEl._s8ScrollBound){
+    lbEl._s8ScrollBound = true;
+    lbEl.addEventListener('scroll', function(){
+      var distFromBottom = lbEl.scrollHeight - lbEl.scrollTop - lbEl.clientHeight;
+      window._s8AutoFollow = distFromBottom < 40;
+    });
+  }
+  function _s8AutoScroll(){
+    if(window._s8AutoFollow===false) return;
+    var lb=document.getElementById('lbox');
+    if(lb) lb.scrollTop=lb.scrollHeight;
+  }
   // Tampilkan tombol skip setelah 3 detik
   setTimeout(function(){ var sb=document.getElementById('skip-letter-btn'); if(sb&&!window._letterSkipped) sb.style.display='block'; }, 3000);
   const cont=document.getElementById('lparas');cont.innerHTML='';let pi=0,ci=0;
   setTimeout(()=>{
     let cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);
-    function ty(){if(pi<paras.length){if(ci<paras[pi].length){cp.innerHTML+=paras[pi][ci++];const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;var _done=0;for(var _k=0;_k<pi;_k++)_done+=paras[_k].length;_s8UpdateProgress(_done+ci);if(!window._letterSkipped)setTimeout(ty,22);}else{pi++;ci=0;if(pi<paras.length){cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;if(!window._letterSkipped)setTimeout(ty,350);}else{_s8UpdateProgress(_s8TotalChars);document.getElementById('lsig').style.opacity='1';const sh=document.getElementById('scroll-hint');if(sh)sh.style.opacity='0';setTimeout(()=>{const lb=document.getElementById('lbox');lb.scrollTop=lb.scrollHeight;document.getElementById('nfl').style.display='inline-flex';const sb=document.getElementById('skip-letter-btn');if(sb)sb.style.display='none';},800);}}}
+    function ty(){if(pi<paras.length){if(ci<paras[pi].length){cp.innerHTML+=paras[pi][ci++];_s8AutoScroll();var _done=0;for(var _k=0;_k<pi;_k++)_done+=paras[_k].length;_s8UpdateProgress(_done+ci);if(!window._letterSkipped)setTimeout(ty,22);}else{pi++;ci=0;if(pi<paras.length){cp=document.createElement('div');cp.className='lpara';cont.appendChild(cp);_s8AutoScroll();if(!window._letterSkipped)setTimeout(ty,350);}else{_s8UpdateProgress(_s8TotalChars);document.getElementById('lsig').style.opacity='1';const sh=document.getElementById('scroll-hint');if(sh)sh.style.opacity='0';setTimeout(()=>{_s8AutoScroll();document.getElementById('nfl').style.display='inline-flex';const sb=document.getElementById('skip-letter-btn');if(sb)sb.style.display='none';},800);}}}
     }_s8UpdateProgress(0);ty();
   },11500);
 }
@@ -3051,36 +3065,7 @@ function goS13(){
       savedAt:new Date().toISOString()
     }));
   }catch(e){}
-  renderS13Recap();
   const i=STAGES.indexOf('s13');if(i>=0)setTimeout(()=>updProg(i),800);
-}
-
-// Kilas balik kecil di stage sertifikat — menarik ulang pilihan/hasil dari
-// beberapa stage sebelumnya (refleksi s3b, kartu tarot str, foto photobooth),
-// bukan data baru, cuma dikumpulkan lagi di satu tempat sebagai penutup.
-function renderS13Recap(){
-  var wrap=document.getElementById('s13-recap');
-  if(!wrap) return;
-  var chips=[];
-  if(selReflect){
-    chips.push('<div style="background:rgba(242,180,65,.08);border:1px solid rgba(242,180,65,.25);border-radius:12px;padding:8px 14px;font-family:\'Space Mono\',monospace;font-size:.58rem;letter-spacing:.5px;color:var(--gold-lt);">✦ Hal besar bagimu: <b>'+selReflect+'</b></div>');
-  }
-  if(selTarot){
-    var tarotShort=selTarot.split(' — ')[0];
-    chips.push('<div style="background:rgba(143,203,234,.08);border:1px solid rgba(143,203,234,.25);border-radius:12px;padding:8px 14px;font-family:\'Space Mono\',monospace;font-size:.58rem;letter-spacing:.5px;color:#8FCBEA;">🔮 Kartu pilihanmu: <b>'+tarotShort+'</b></div>');
-  }
-  try{
-    var photo=localStorage.getItem('nphotobooth');
-    if(photo){
-      chips.push('<img src="'+photo+'" style="width:52px;height:52px;object-fit:cover;border-radius:12px;border:1px solid rgba(246,203,122,.4);vertical-align:middle;" alt="Kenangan photobooth">');
-    }
-  }catch(e){}
-  if(chips.length){
-    wrap.innerHTML=chips.join('');
-    wrap.style.display='flex';
-  } else {
-    wrap.style.display='none';
-  }
 }
 
 // ===== KUNJUNGAN ULANG (setelah hari-H) =====
